@@ -14,16 +14,18 @@ our $VERSION = '0.0';
 sub show_usage {
 	my ($exit_status) = @_;
 
-	say "Usage: $0 [-d <offset>] [-ov] <latitude> <longitude>";
+	say
+"Usage: $0 [-d <offset>] [-t <twilight altitude>] [-ov] <latitude> <longitude>";
 	exit( $exit_status // 0 );
 }
 
 sub get_rise_and_set {
-	my ( $ts, $lon, $lat ) = @_;
+	my ( $ts, $lon, $lat, $alt ) = @_;
 
 	my ( $rise_str, $set_str )
 	  = sunrise( $ts->year, $ts->month, $ts->day, $lon, $lat,
-		$ts->offset / 3600, 0 );
+		$ts->offset / 3600,
+		0, $alt );
 
 	my ( $rise_h, $rise_m ) = ( $rise_str =~ m{(..):(..)} );
 	my ( $set_h,  $set_m )  = ( $set_str =~ m{(..):(..)} );
@@ -42,7 +44,7 @@ sub get_rise_and_set {
 }
 
 my %opts;
-getopts( 'd:hov', \%opts );
+getopts( 'd:hot:v', \%opts );
 
 if ( $opts{h} ) {
 	show_usage(0);
@@ -61,8 +63,10 @@ if ( $opts{d} and not $opts{d} =~ m{ ^ -? [[:digit:]]+ $}x ) {
 
 my $now = DateTime->now( time_zone => 'local' );
 my $delta = DateTime::Duration->new( minutes => $opts{d} || 0 );
+my $altitude = $opts{t} // Astro::Sunrise::DEFAULT;
 
-my ( $sunrise, $sunset ) = get_rise_and_set( $now, $longitude, $latitude );
+my ( $sunrise, $sunset )
+  = get_rise_and_set( $now, $longitude, $latitude, $altitude );
 
 $sunrise->add_duration($delta);
 $sunset->subtract_duration($delta);
