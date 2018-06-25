@@ -11,29 +11,58 @@ use Getopt::Std;
 
 our $VERSION = '0.0';
 
-my %opts;
-getopts( 'd:ov', \%opts );
+sub show_usage {
+	my ($exit_status) = @_;
 
-my $now = DateTime->now( time_zone => 'Europe/Berlin' );
+	say "Usage: $0 [-d <offset>] [-ov] <latitude> <longitude>";
+	exit( $exit_status // 0 );
+}
+
+sub get_rise_and_set {
+	my ( $ts, $lon, $lat ) = @_;
+
+	my ( $rise_str, $set_str )
+	  = sunrise( $ts->year, $ts->month, $ts->day, $lon, $lat,
+		$ts->offset / 3600, 0 );
+
+	my ( $rise_h, $rise_m ) = ( $rise_str =~ m{(..):(..)} );
+	my ( $set_h,  $set_m )  = ( $set_str =~ m{(..):(..)} );
+
+	my $rise = $ts->clone->set(
+		hour   => $rise_h,
+		minute => $rise_m,
+	);
+
+	my $set = $ts->clone->set(
+		hour   => $set_h,
+		minute => $set_m,
+	);
+
+	return ( $rise, $set );
+}
+
+my %opts;
+getopts( 'd:hov', \%opts );
+
+if ( $opts{h} ) {
+	show_usage(0);
+}
+
+if ( @ARGV != 2 ) {
+	show_usage(1);
+}
+
+my ( $latitude, $longitude ) = @ARGV;
+
+if ( $opts{d} and not $opts{d} =~ m{ ^ -? [[:digit:]]+ $}x ) {
+	say STDERR "Error: Offset (-d ...) must be a number\n";
+	show_usage(1);
+}
+
+my $now = DateTime->now( time_zone => 'local' );
 my $delta = DateTime::Duration->new( minutes => $opts{d} || 0 );
 
-my ( $rise_str, $set_str )
-  = sunrise( $now->year, $now->month, $now->day, 6.47, 51.14,
-	$now->offset / 3600,
-	0 );
-
-my ( $rise_h, $rise_m ) = ( $rise_str =~ m{(..):(..)} );
-my ( $set_h,  $set_m )  = ( $set_str  =~ m{(..):(..)} );
-
-my $sunrise = $now->clone->set(
-	hour   => $rise_h,
-	minute => $rise_m,
-);
-
-my $sunset = $now->clone->set(
-	hour   => $set_h,
-	minute => $set_m,
-);
+my ( $sunrise, $sunset ) = get_rise_and_set( $now, $longitude, $latitude );
 
 $sunrise->add_duration($delta);
 $sunset->subtract_duration($delta);
