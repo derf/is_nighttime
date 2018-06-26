@@ -33,11 +33,13 @@ sub get_rise_and_set {
 	my $rise = $ts->clone->set(
 		hour   => $rise_h,
 		minute => $rise_m,
+		second => 0,
 	);
 
 	my $set = $ts->clone->set(
 		hour   => $set_h,
 		minute => $set_m,
+		second => 0,
 	);
 
 	return ( $rise, $set );
@@ -72,9 +74,9 @@ $sunrise->add_duration($delta);
 $sunset->subtract_duration($delta);
 
 if ( $opts{v} ) {
-	say 'rise at ' . $sunrise->hms;
-	say 'now is ' . $now->hms;
-	say 'set at ' . $sunset->hms;
+	say 'rise at ' . $sunrise->strftime('%H:%M');
+	say 'now is ' . $now->strftime('%H:%M');
+	say 'set at ' . $sunset->strftime('%H:%M');
 }
 
 if ( $opts{o} ) {
