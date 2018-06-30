@@ -93,19 +93,103 @@ __END__
 
 =head1 NAME
 
+is_nighttime - Check whether it is day or night
+
 =head1 SYNOPSIS
+
+B<is_nighttime> [B<-d> I<offset>] [B<-t> I<twilight altitude>] [B<-ov>]
+I<latitude> I<longitude>
 
 =head1 VERSION
 
+version 0.00
+
 =head1 DESCRIPTION
+
+B<is_nighttime> determines whether it is day or night at a given position.  It
+supports various nighttime definitions based on the altitude of the sun with
+respect to the horizon. B<is_nighttime> is mostly a CLI frontend to
+L<Astro::Sunrise>.
+
+For instance, C<< is_nighttime -v 51.21653 6.78342 >> checks whether it is
+civil nightttime in DE<uuml>sseldorf, Germany, and also prints sunrise,
+current, and sunset time in HH:MM format on stdout.
 
 =head1 OPTIONS
 
 =over
 
+=item B<-d> I<offset>
+
+Report sunrise I<offset> minutes later and sunset I<offset> minutes earlier,
+thus causing the reported night to be B<2*>I<offset> minutes longer.
+
+=item B<-o>
+
+Print day/night status on stdout instead of signaling it via the exit code.
+C<0> means day, C<1> is night.
+
+=item B<-t> I<twilight altitude>
+
+Change definition of nighttime: It is night iff the center of the sun's disk
+is at least I<twilight altitude> degrees below a mathematical horizon.
+Defaults to B<-0.833> degrees. This is the point at wich the sun's upper limb
+touches the horizon, accounting for atmospheric refraction.
+
+The following values (taken from L<Astro::Sunrise>) may also be useful:
+
+=over
+
+=item B<0> degrees
+
+Center of sun's disk touches a mathematical horizon.
+
+=item B<-0.25> degrees
+
+Sun's upper limb touches a mathematical horizon.
+
+=item B<-0.583> degrees
+
+Center of sun's disk touches the horizon, accounting for atmospheric refraction.
+
+=item B<-0.833> degrees
+
+Sun's upper limb touches the horizon, accounting for atmospheric refraction.
+This is the default.
+
+=item B<-6> degrees
+
+Civil twilight (reading without artificial illumination is no longer possible).
+
+=item B<-12> degrees
+
+Nautical twilight (sea horizon is no longer visible).
+
+=item B<-15> degrees
+
+Amateur astronomical twilight (the sky is quite dark).
+
+=item B<-18> degrees
+
+Astronomical twilight (the sky is completely dark).
+
+=back
+
+Note that, depending on time of year and altitude, there are twilight
+definitions for which no sunrise and sunset exist.  B<is_nighttime> behaviour
+for these cases has not yet been defined.
+
+=item B<-v>
+
+Print sunrise, current, and sunset time in HH:MM format on stdout.
+
 =back
 
 =head1 EXIT STATUS
+
+When B<-o> is used: 0 after normal operation, 1 if an error occured.
+
+Otherwise: 0 if it is nighttime, 1 if it is daytime or an error occured.
 
 =head1 CONFIGURATION
 
@@ -115,14 +199,18 @@ None.
 
 =over
 
+=item * Astro::Sunrise
+
 =back
 
 =head1 BUGS AND LIMITATIONS
 
+Sunset after midnight is not handled properly.
+
 =head1 AUTHOR
 
-Copyright (C) 2012 by Daniel Friesel E<lt>derf@finalrewind.orgE<gt>
+Copyright (C) 2018 by Daniel Friesel E<lt>derf@finalrewind.orgE<gt>
 
 =head1 LICENSE
 
-  0. You just DO WHAT THE FUCK YOU WANT TO.
+  This program is licensed under the same terms as Perl itself.
